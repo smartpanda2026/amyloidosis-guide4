@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amyloidosis Wizard · Dialysis / ESRD Guidance Added</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        body { background: #f4f7fc; margin: 0; padding: 1.5rem 1rem; display: flex; justify-content: center; min-height: 100vh; }
+        .app-container { max-width: 1300px; width: 100%; background: #fff; border-radius: 2rem; box-shadow: 0 20px 40px rgba(0,20,40,0.08); padding: 2rem; }
+        h1 { font-size: 1.9rem; font-weight: 600; color: #0b2a4a; margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .subhead { color: #4a5c6e; font-size: 0.95rem; margin-bottom: 1.5rem; border-left: 4px solid #1a6fb0; padding-left: 1rem; background: #f0f6ff; border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; }
+        .unit-toggle { display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+        .unit-toggle button { background: #eef2f7; border: none; padding: 0.5rem 1rem; border-radius: 2rem; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.15s; color: #1f3a5e; }
+        .unit-toggle button.active { background: #0b2a4a; color: #fff; }
+        .type-selector { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.5rem; }
+        .type-btn { background: #eef2f7; border: 1px solid #cfddee; border-radius: 2rem; padding: 0.6rem 1.3rem; font-weight: 500; font-size: 0.9rem; cursor: pointer; color: #1f3a5e; flex: 1 0 auto; text-align: center; }
+        .type-btn.active { background: #1a6fb0; border-color: #1a6fb0; color: #fff; box-shadow: 0 4px 8px rgba(26,111,176,0.3); }
+        .type-btn.rare { background: #f3e8ff; border-color: #c9a7e8; color: #5a2d82; }
+        .type-btn.rare.active { background: #7b3fa0; border-color: #7b3fa0; color: #fff; }
+        .type-btn.diag { background: #fff3e0; border-color: #ffcc80; color: #e65100; }
+        .type-btn.diag.active { background: #e65100; border-color: #e65100; color: #fff; }
+        .type-btn.hf { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
+        .type-btn.hf.active { background: #2e7d32; border-color: #2e7d32; color: #fff; }
+        .type-btn.dial { background: #fce4ec; border-color: #f48fb1; color: #ad1457; }
+        .type-btn.dial.active { background: #ad1457; border-color: #ad1457; color: #fff; }
+        .wizard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 820px) { .wizard-grid { grid-template-columns: 1fr; } .app-container { padding: 1.2rem; } }
+        .card { background: #fff; border: 1px solid #dbe4ed; border-radius: 1.5rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .card-title { font-size: 1.15rem; font-weight: 600; color: #0b2a4a; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid #e2e9f2; padding-bottom: 0.75rem; flex-wrap: wrap; }
+        .badge { font-size: 0.7rem; font-weight: 600; background: #d4e3ff; color: #0b2a4a; padding: 0.2rem 0.7rem; border-radius: 2rem; text-transform: uppercase; }
+        .badge.rare { background: #ead9ff; color: #5a2d82; }
+        .badge.diag { background: #ffe0b2; color: #e65100; }
+        .badge.hf { background: #c8e6c9; color: #1b5e20; }
+        .badge.dial { background: #f8bbd0; color: #ad1457; }
+        .step { background: #f9fbfe; border-radius: 1rem; padding: 1.1rem 1.25rem; margin-bottom: 1rem; border-left: 4px solid #1a6fb0; }
+        .step.rare { border-left-color: #7b3fa0; background: #faf5ff; }
+        .step.diag { border-left-color: #e65100; background: #fff8f0; }
+        .step.hf { border-left-color: #2e7d32; background: #f1f8f2; }
+        .step.dial { border-left-color: #ad1457; background: #fff0f5; }
+        .step-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5b7a9a; font-weight: 600; margin-bottom: 0.3rem; }
+        .step.rare .step-label { color: #7b3fa0; }
+        .step.diag .step-label { color: #e65100; }
+        .step.hf .step-label { color: #2e7d32; }
+        .step.dial .step-label { color: #ad1457; }
+        .step-content { font-size: 0.93rem; color: #162b3f; line-height: 1.55; }
+        .regimen { background: #fff; border: 1px solid #cbdbea; border-radius: 1rem; padding: 1rem 1.25rem; margin: 0.75rem 0; }
+        .regimen.rare { border-color: #dcc7f0; background: #fdfaff; }
+        .regimen.diag { border-color: #ffcc80; background: #fffaf5; }
+        .regimen.hf { border-color: #a5d6a7; background: #f8fdf9; }
+        .regimen.dial { border-color: #f48fb1; background: #fff5f8; }
+        .regimen-name { font-weight: 700; color: #0b2a4a; font-size: 1rem; }
+        .regimen.rare .regimen-name { color: #5a2d82; }
+        .regimen.diag .regimen-name { color: #e65100; }
+        .regimen.hf .regimen-name { color: #2e7d32; }
+        .regimen.dial .regimen-name { color: #ad1457; }
+        .regimen-dose { font-family: 'SF Mono','Cascadia Code',monospace; font-size: 0.85rem; background: #edf4fa; padding: 0.6rem 1rem; border-radius: 0.75rem; margin: 0.5rem 0; color: #003366; border: 1px solid #d0e0f0; line-height: 1.6; }
+        .efficacy { display: inline-block; background: #e4f2e8; color: #0d6832; font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.8rem; border-radius: 2rem; margin-top: 0.3rem; }
+        .warning { background: #fff6e6; border-left: 4px solid #e6a017; padding: 0.7rem 1rem; border-radius: 0.75rem; font-size: 0.88rem; color: #6b4f1a; margin: 0.8rem 0 0.4rem; }
+        .stop-alert { background: #ffeaea; border-left: 4px solid #c0392b; padding: 0.8rem 1rem; border-radius: 0.75rem; font-size: 0.9rem; color: #7a1f1f; margin: 1rem 0; font-weight: 500; }
+        .table-sm { font-size: 0.83rem; width: 100%; border-collapse: collapse; margin: 0.5rem 0; }
+        .table-sm th, .table-sm td { text-align: left; padding: 0.3rem 0.5rem; border-bottom: 1px solid #e9eef5; }
+        .ref { font-size: 0.72rem; color: #7a8fa3; margin-top: 0.3rem; }
+        .grade-box { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.5rem 0; }
+        .grade-box span { padding: 0.3rem 0.9rem; border-radius: 2rem; font-size: 0.8rem; font-weight: 600; }
+        .grade-0 { background: #e8f5e9; color: #2e7d32; }
+        .grade-1 { background: #fff8e1; color: #f57f17; }
+        .grade-2 { background: #ffe0b2; color: #e65100; }
+        .grade-3 { background: #ffcdd2; color: #b71c1c; }
+        .footer { font-size: 0.78rem; color: #7a8fa3; margin-top: 2rem; text-align: center; border-top: 1px solid #e2e9f2; padding-top: 1.2rem; }
+        .red-flag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.5rem 0; }
+        .red-flag-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; }
+        .red-flag-item input { margin: 0; }
+        .score-display { background: #0b2a4a; color: #fff; padding: 0.6rem 1rem; border-radius: 0.75rem; font-weight: 600; display: inline-block; margin: 0.5rem 0; }
+        .prognosis-card { background: linear-gradient(135deg, #0b2a4a 0%, #1a4b7a 100%); color: #fff; border-radius: 1rem; padding: 1.1rem 1.25rem; margin: 0.75rem 0; }
+        .prognosis-card.rare { background: linear-gradient(135deg, #4a1a6b 0%, #7b3fa0 100%); }
+        .prognosis-card.diag { background: linear-gradient(135deg, #bf360c 0%, #e65100 100%); }
+        .prognosis-card.hf { background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%); }
+        .prognosis-card.dial { background: linear-gradient(135deg, #880e4f 0%, #ad1457 100%); }
+        .prognosis-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; margin-bottom: 0.3rem; }
+        .prognosis-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+        .prognosis-sub { font-size: 0.85rem; opacity: 0.9; margin-top: 0.2rem; }
+        .prognosis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.5rem; }
+        .prognosis-item { background: rgba(255,255,255,0.1); border-radius: 0.6rem; padding: 0.6rem 0.8rem; }
+        .prognosis-item .label { font-size: 0.7rem; opacity: 0.8; text-transform: uppercase; }
+        .prognosis-item .value { font-size: 1.15rem; font-weight: 700; }
+        .stage-badge { display: inline-block; padding: 0.2rem 0.8rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; }
+        .stage-I { background: #c8e6c9; color: #1b5e20; }
+        .stage-II { background: #fff9c4; color: #f57f17; }
+        .stage-III { background: #ffe0b2; color: #e65100; }
+        .stage-IV { background: #ffcdd2; color: #b71c1c; }
+        .param-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 1rem; margin: 0.5rem 0; }
+        .param-item { display: flex; flex-direction: column; gap: 0.15rem; }
+        .param-item label { font-size: 0.75rem; color: #5b7a9a; font-weight: 600; }
+        .param-item input, .param-item select { padding: 0.35rem 0.5rem; border: 1px solid #cfddee; border-radius: 0.5rem; font-size: 0.85rem; background: #fff; }
+        .param-item input:focus, .param-item select:focus { outline: 2px solid #1a6fb0; border-color: transparent; }
+        .param-section { background: #f0f6ff; border-radius: 0.75rem; padding: 0.9rem 1rem; margin-bottom: 1rem; border: 1px solid #d4e3ff; }
+        .param-section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #1a6fb0; font-weight: 700; margin-bottom: 0.5rem; }
+        .rib-diagram { background: #1a2b3f; border-radius: 0.75rem; padding: 1rem; margin: 0.75rem 0; color: #fff; }
+        .rib-diagram-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; margin-bottom: 0.75rem; }
+        .rib-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .rib-row:last-child { border-bottom: none; }
+        .rib-grade { width: 70px; font-weight: 700; font-size: 0.85rem; }
+        .rib-heart { width: 80px; font-size: 1.4rem; text-align: center; }
+        .rib-desc { flex: 1; font-size: 0.82rem; opacity: 0.95; }
+        .heart-0 { opacity: 0.15; }
+        .heart-1 { opacity: 0.4; }
+        .heart-2 { opacity: 0.75; }
+        .heart-3 { opacity: 1; }
+        .rib-compare { font-size: 1.4rem; text-align: center; width: 60px; }
+        .rib-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 0.5rem 0; }
+        .rib-table th { background: #1a2b3f; color: #fff; padding: 0.4rem 0.6rem; text-align: left; font-weight: 600; }
+        .rib-table td { padding: 0.4rem 0.6rem; border-bottom: 1px solid #e9eef5; }
+        .rib-table tr:nth-child(even) { background: #f7fafd; }
+        .organ-chip { display: inline-block; background: #e8f0fe; color: #1a4b7a; font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 1rem; margin-right: 0.3rem; }
+        .avoid-box { background: #fff0f0; border: 1px solid #ffbdbd; border-radius: 0.75rem; padding: 0.8rem 1rem; margin: 0.5rem 0; }
+        .avoid-title { font-weight: 700; color: #b71c1c; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .prefer-box { background: #f0fdf4; border: 1px solid #a5d6a7; border-radius: 0.75rem; padding: 0.8rem 1rem; margin: 0.5rem 0; }
+        .prefer-title { font-weight: 700; color: #1b5e20; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        /* Dialysis box */
+        .dialysis-box { background: #fff0f5; border: 2px solid #f48fb1; border-radius: 1rem; padding: 1rem 1.25rem; margin: 1rem 0; }
+        .dialysis-box-title { font-weight: 700; color: #ad1457; font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .dialysis-box table { font-size: 0.82rem; width: 100%; border-collapse: collapse; margin: 0.5rem 0; }
+        .dialysis-box th { background: #ad1457; color: #fff; padding: 0.35rem 0.6rem; text-align: left; font-weight: 600; font-size: 0.78rem; }
+        .dialysis-box td { padding: 0.35rem 0.6rem; border-bottom: 1px solid #fce4ec; }
+        .dialysis-box tr:nth-child(even) { background: #fff5f8; }
+        .dial-avoid { color: #b71c1c; font-weight: 600; }
+        .dial-caution { color: #e65100; font-weight: 600; }
+        .dial-ok { color: #2e7d32; font-weight: 600; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <h1>🧬 Amyloidosis Wizard <span class="badge">Dialysis / ESRD Added</span></h1>
+    <div class="subhead">
+        New <strong>🩸 Dialysis / ESRD</strong> panel covers CHF medication guidance for AL amyloidosis on dialysis, including what to avoid, what may be used cautiously, and the role of ultrafiltration.
+    </div>
+
+    <div class="unit-toggle">
+        <span style="font-size:0.85rem;color:#2b4b6f;">Units:</span>
+        <button id="unitUS" class="active" onclick="setUnit('US')">🇺🇸 US (mg/dL, ng/mL)</button>
+        <button id="unitSI" onclick="setUnit('SI')">🇪🇺 SI (mg/L, ng/L)</button>
+    </div>
+
+    <div class="type-selector">
+        <button class="type-btn active" data-type="AL" onclick="selectType('AL')">AL (Light Chain)</button>
+        <button class="type-btn" data-type="ATTR" onclick="selectType('ATTR')">ATTR (Transthyretin)</button>
+        <button class="type-btn" data-type="AA" onclick="selectType('AA')">AA (Secondary)</button>
+        <button class="type-btn diag" data-type="DIAG" onclick="selectType('DIAG')">🩺 Diagnostic Imaging</button>
+        <button class="type-btn hf" data-type="HF" onclick="selectType('HF')">❤️ HF Management</button>
+        <button class="type-btn dial" data-type="DIAL" onclick="selectType('DIAL')">🩸 Dialysis / ESRD</button>
+        <button class="type-btn rare" data-type="RARE" onclick="selectType('RARE')">🧬 Rare / Other Types</button>
+    </div>
+
+    <div class="wizard-grid">
+        <div class="card">
+            <div class="card-title">🔍 Patient Parameters, Staging & Prognosis <span class="badge">Step 1</span></div>
+            <div id="leftPanel"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">💊 Treatment, Success Rates & Dosing <span class="badge">Step 2</span></div>
+            <div id="rightPanel"></div>
+        </div>
+    </div>
+    <div class="footer">
+        ⚕️ Clinical decision support only. Exclusions mirror trial criteria. Verify all doses. <br>
+        Sources: NCCN v1.2027; ANDROMEDA final (Blood 2026); ATTR-ACT LTE; ATTRibute-CM OLE; HELIOS-B; EMN22; Mayo 2012; NAC staging; Perugini et al.; AHA 2020; ACC 2023; 2025 ACC Concise Guidance; Heart Failure Reviews 2026; FOSIDIAL; CardioMEMS case reports.
+    </div>
+</div>
+
+<script>
+// ================= STATE =================
+let currentType = 'AL';
+let currentUnit = 'US';
+let patient = {
+    age: 72, sex: 'M',
+    weight: 75, height: 172,
+    egfr: 55,
+    nyha: 'II',
+    ntProBNP: 2000,
+    cTnT: 0.030,
+    dflc: 20,
+    factorX: 45,
+    ecgLowVoltage: true,
+    ecgPseudoInfarct: true,
+    echoLVH: true,
+    echoApicalSparing: true,
+    mriLGE: true,
+    carpalTunnel: true,
+    familyHistory: false,
+    pypGrade: 'none',
+    gls: -10,
+    attrType: 'wt',
+    monoclonalProtein: false,
+    onBetaBlocker: false,
+    onACEi: false,
+    onMRA: false,
+    onSGLT2: false,
+    onDialysis: false
+};
+
+// ================= COMPUTED =================
+function getBSA() { return Math.sqrt((patient.height * patient.weight) / 3600); }
+
+// ================= UNIT HELPERS =================
+function displayNT(v) { return currentUnit === 'US' ? `${v} pg/mL` : `${v} ng/L`; }
+function displayTnT(v) { return currentUnit === 'US' ? `${v} ng/mL` : `${(v*1000).toFixed(0)} ng/L`; }
+function displayDFLC(v) { return currentUnit === 'US' ? `${v} mg/dL` : `${(v*10).toFixed(1)} mg/L`; }
+function toCanonical(field, uiValue) {
+    if (currentUnit === 'US') return uiValue;
+    if (field === 'cTnT') return uiValue / 1000;
+    if (field === 'dflc') return uiValue / 10;
+    return uiValue;
+}
+function toDisplay(field, usValue) {
+    if (currentUnit === 'US') return usValue;
+    if (field === 'cTnT') return usValue * 1000;
+    if (field === 'dflc') return usValue * 10;
+    return usValue;
+}
+function unitForField(field) {
+    if (field === 'cTnT') return currentUnit === 'US' ? 'ng/mL' : 'ng/L';
+    if (field === 'dflc') return currentUnit === 'US' ? 'mg/dL' : 'mg/L';
+    if (field === 'ntProBNP') return currentUnit === 'US' ? 'pg/mL' : 'ng/L';
+    return '';
+}
+
+// ================= RED FLAG =================
+function computeRedFlagScore() {
+    let s = 0;
+    if (patient.ecgLowVoltage) s++;
+    if (patient.ecgPseudoInfarct) s++;
+    if (patient.echoLVH) s++;
+    if (patient.echoApicalSparing) s++;
+    if (patient.mriLGE) s++;
+    if (patient.carpalTunnel) s++;
+    if (patient.familyHistory) s++;
+    if (patient.age >= 65) s++;
+    return s;
+}
+
+// ================= PATIENT INPUTS =================
+function renderPatientInputs() {
+    return `
+        <div class="param-section">
+            <div class="param-section-title">Patient Demographics & Organ Function</div>
+            <div class="param-grid">
+                <div class="param-item"><label>Age (years)</label><input type="number" value="${patient.age}" min="1" max="120" onchange="updateParam('age', this.value)"></div>
+                <div class="param-item"><label>Sex</label><select onchange="updateParam('sex', this.value)"><option value="M" ${patient.sex==='M'?'selected':''}>Male</option><option value="F" ${patient.sex==='F'?'selected':''}>Female</option></select></div>
+                <div class="param-item"><label>Weight (kg)</label><input type="number" value="${patient.weight}" min="20" max="250" step="0.5" onchange="updateParam('weight', this.value)"></div>
+                <div class="param-item"><label>Height (cm)</label><input type="number" value="${patient.height}" min="100" max="220" onchange="updateParam('height', this.value)"></div>
+                <div class="param-item"><label>eGFR (mL/min/1.73m²)</label><input type="number" value="${patient.egfr}" min="5" max="150" onchange="updateParam('egfr', this.value)"></div>
+                <div class="param-item"><label>NYHA Class</label><select onchange="updateParam('nyha', this.value)"><option value="I" ${patient.nyha==='I'?'selected':''}>I</option><option value="II" ${patient.nyha==='II'?'selected':''}>II</option><option value="IIIA" ${patient.nyha==='IIIA'?'selected':''}>IIIA</option><option value="IIIB" ${patient.nyha==='IIIB'?'selected':''}>IIIB</option><option value="IV" ${patient.nyha==='IV'?'selected':''}>IV</option></select></div>
+            </div>
+        </div>
+        <div class="param-section" style="background:#fff8f0; border-color:#ffcc80;">
+            <div class="param-section-title" style="color:#e65100;">Cardiac Biomarkers (Staging Inputs)</div>
+            <div class="param-grid">
+                <div class="param-item"><label>NT-proBNP (${unitForField('ntProBNP')})</label><input type="number" value="${toDisplay('ntProBNP', patient.ntProBNP)}" step="1" onchange="updateParam('ntProBNP', this.value)"></div>
+                <div class="param-item"><label>cTnT (${unitForField('cTnT')})</label><input type="number" value="${toDisplay('cTnT', patient.cTnT)}" step="0.001" onchange="updateParam('cTnT', this.value)"></div>
+                <div class="param-item"><label>dFLC (${unitForField('dflc')})</label><input type="number" value="${toDisplay('dflc', patient.dflc)}" step="0.1" onchange="updateParam('dflc', this.value)"></div>
+                <div class="param-item"><label>Factor X (%)</label><input type="number" value="${patient.factorX}" min="0" max="150" onchange="updateParam('factorX', this.value)"></div>
+                <div class="param-item"><label>GLS (%)</label><input type="number" value="${patient.gls}" step="0.1" onchange="updateParam('gls', this.value)"></div>
+                <div class="param-item"><label>PYP Grade</label><select onchange="updateParam('pypGrade', this.value)"><option value="none" ${patient.pypGrade==='none'?'selected':''}>Not performed</option><option value="0" ${patient.pypGrade==='0'?'selected':''}>Grade 0</option><option value="1" ${patient.pypGrade==='1'?'selected':''}>Grade 1</option><option value="2" ${patient.pypGrade==='2'?'selected':''}>Grade 2</option><option value="3" ${patient.pypGrade==='3'?'selected':''}>Grade 3</option></select></div>
+                <div class="param-item"><label>Monoclonal Protein</label><select onchange="updateParam('monoclonalProtein', this.value)"><option value="false" ${!patient.monoclonalProtein?'selected':''}>Negative</option><option value="true" ${patient.monoclonalProtein?'selected':''}>Positive</option></select></div>
+            </div>
+        </div>
+        <div class="param-section" style="background:#f1f8f2; border-color:#a5d6a7;">
+            <div class="param-section-title" style="color:#2e7d32;">Current HF Medications & Dialysis Status</div>
+            <div class="param-grid">
+                <div class="param-item"><label>Beta-blocker</label><select onchange="updateParam('onBetaBlocker', this.value)"><option value="false" ${!patient.onBetaBlocker?'selected':''}>No</option><option value="true" ${patient.onBetaBlocker?'selected':''}>Yes</option></select></div>
+                <div class="param-item"><label>ACEi / ARB</label><select onchange="updateParam('onACEi', this.value)"><option value="false" ${!patient.onACEi?'selected':''}>No</option><option value="true" ${patient.onACEi?'selected':''}>Yes</option></select></div>
+                <div class="param-item"><label>MRA</label><select onchange="updateParam('onMRA', this.value)"><option value="false" ${!patient.onMRA?'selected':''}>No</option><option value="true" ${patient.onMRA?'selected':''}>Yes</option></select></div>
+                <div class="param-item"><label>SGLT2 inhibitor</label><select onchange="updateParam('onSGLT2', this.value)"><option value="false" ${!patient.onSGLT2?'selected':''}>No</option><option value="true" ${patient.onSGLT2?'selected':''}>Yes</option></select></div>
+                <div class="param-item"><label>On Dialysis?</label><select onchange="updateParam('onDialysis', this.value)"><option value="false" ${!patient.onDialysis?'selected':''}>No</option><option value="true" ${patient.onDialysis?'selected':''}>Yes</option></select></div>
+            </div>
+        </div>
+    `;
+}
+
+function updateParam(field, value) {
+    if (field === 'age' || field === 'egfr' || field === 'weight' || field === 'height' || field === 'factorX' || field === 'gls') {
+        patient[field] = parseFloat(value) || 0;
+    } else if (field === 'monoclonalProtein' || field === 'onBetaBlocker' || field === 'onACEi' || field === 'onMRA' || field === 'onSGLT2' || field === 'onDialysis') {
+        patient[field] = value === 'true';
+    } else if (field === 'sex' || field === 'nyha' || field === 'pypGrade' || field === 'attrType') {
+        patient[field] = value;
+    } else if (field === 'ntProBNP' || field === 'cTnT' || field === 'dflc') {
+        patient[field] = toCanonical(field, parseFloat(value) || 0);
+    }
+    render();
+}
+function toggleFlag(k) { patient[k] = !patient[k]; render(); }
+
+// ================= DIALYSIS BOX (reusable) =================
+function renderDialysisBox() {
+    return `
+        <div class="dialysis-box">
+            <div class="dialysis-box-title">🩸 AL Amyloidosis on Dialysis — CHF Medication Guidance</div>
+            <div style="font-size:0.88rem; color:#7a1f3f; margin-bottom:0.5rem;">
+                In dialysis-dependent AL amyloidosis, standard HFrEF drugs are either <strong>unsafe, ineffective, or contraindicated</strong>. Volume control is primarily achieved by <strong>ultrafiltration during dialysis</strong>, not by loop diuretics.
+            </div>
+            <table>
+                <tr><th>Agent</th><th>Use in AL + Dialysis?</th><th>Notes</th></tr>
+                <tr><td><strong>Furosemide</strong></td><td class="dial-caution">Limited</td><td>High doses (40–80 mg BID, up to 200 mg IV) needed; often ineffective if anuric. Does not replace ultrafiltration.</td></tr>
+                <tr><td><strong>ACEi / ARB / ARNI</strong></td><td class="dial-avoid">Avoid</td><td>Cause vasodilation/hypotension in output-limited ventricle. FOSIDIAL trial: fosinopril did not reduce CV events or mortality in HD patients with LVH.</td></tr>
+                <tr><td><strong>Beta-blockers</strong></td><td class="dial-avoid">Avoid (usually)</td><td>Fixed stroke volume makes cardiac output heart-rate dependent. Deprescribing in ATTR-CM associated with improved survival.</td></tr>
+                <tr><td><strong>Spironolactone / MRA</strong></td><td class="dial-avoid">Avoid in ESRD</td><td>Risk of hyperkalemia is prohibitive — dialysis patients cannot clear potassium.</td></tr>
+                <tr><td><strong>SGLT2 inhibitors</strong></td><td class="dial-caution">Only if already on it</td><td>No initiation data at eGFR <25. Evidence in dialysis-dependent AL essentially absent.</td></tr>
+                <tr><td><strong>Verapamil / diltiazem</strong></td><td class="dial-avoid">Absolutely no</td><td>Bind amyloid fibrils → can precipitate heart block or shock.</td></tr>
+                <tr><td><strong>Digoxin</strong></td><td class="dial-avoid">Absolutely no</td><td>Binds amyloid fibrils → toxicity risk even at normal serum levels.</td></tr>
+                <tr><td><strong>Dialysis ultrafiltration</strong></td><td class="dial-ok">Yes — mainstay</td><td>Primary volume control. Consider CardioMEMS-guided PA pressure monitoring — reduced HF hospitalizations from 5 in 1 year to 1 over 10 months in a case report.</td></tr>
+                <tr><td><strong>CAPD</strong></td><td class="dial-ok">Consider</td><td>Continuous ambulatory peritoneal dialysis reported effective for refractory congestion in AL amyloidosis with severe HF when IV diuretics failed.</td></tr>
+            </table>
+            <div style="font-size:0.85rem; color:#7a1f3f; margin-top:0.5rem;">
+                <strong>Bottom line:</strong> No "good" CHF medication regimen exists for AL on dialysis. Strategy shifts to <strong>optimize dialysis</strong> (ultrafiltration, consider CardioMEMS or CAPD), <strong>treat the underlying plasma cell clone</strong> with AL-directed chemotherapy (the only intervention that alters disease course), use furosemide sparingly if residual renal function exists, and <strong>absolutely avoid</strong> verapamil, diltiazem, and digoxin.
+            </div>
+        </div>
+    `;
+}
+
+// ================= PYP SECTION =================
+function renderPYP() {
+    let gradeText = '';
+    if (patient.pypGrade === 'none') gradeText = 'Not performed';
+    else if (patient.pypGrade === '0') gradeText = 'Grade 0 · No uptake — negative';
+    else if (patient.pypGrade === '1') gradeText = 'Grade 1 · Less than rib — equivocal';
+    else if (patient.pypGrade === '2') gradeText = 'Grade 2 · Equal to rib — positive';
+    else if (patient.pypGrade === '3') gradeText = 'Grade 3 · Greater than rib — positive';
+
+    let conclusion = '';
+    if (patient.pypGrade === '2' || patient.pypGrade === '3') {
+        if (patient.monoclonalProtein) {
+            conclusion = '<span style="color:#c0392b;font-weight:600;">⚠️ Grade 2/3 BUT monoclonal protein positive — specificity drops to ~68%. Tissue biopsy with mass spectrometry required to confirm ATTR.</span>';
+        } else {
+            conclusion = '<span style="color:#0d6832;font-weight:600;">✅ Diagnostic of ATTR-CM (monoclonal protein negative).</span>';
+        }
+    } else if (patient.pypGrade === '1') {
+        conclusion = '<span style="color:#f57f17;font-weight:600;">⚠️ Equivocal — SPECT required to distinguish myocardial uptake from blood pool.</span>';
+    } else if (patient.pypGrade === '0') {
+        conclusion = '<span style="color:#2e7d32;font-weight:600;">Negative — ATTR unlikely.</span>';
+    } else {
+        conclusion = '<span style="color:#7a8fa3;">Not yet performed.</span>';
+    }
+
+    return `
+        <div class="step">
+            <div class="step-label">Amyloid Scan · ⁹⁹ᵐTc-PYP / DPD / HMDP</div>
+            <div class="step-content">
+                <strong>Current result:</strong> ${gradeText}<br>${conclusion}
+            </div>
+            <div class="rib-diagram">
+                <div class="rib-diagram-title">What is "the rib"? — Visual Reference Standard</div>
+                <div class="rib-row"><div class="rib-grade">Grade 0</div><div class="rib-heart heart-0">🫀</div><div class="rib-compare">vs 🦴</div><div class="rib-desc">No cardiac uptake. Ribs bright. <strong>Negative.</strong></div></div>
+                <div class="rib-row"><div class="rib-grade">Grade 1</div><div class="rib-heart heart-1">🫀</div><div class="rib-compare">vs 🦴</div><div class="rib-desc">Heart uptake <strong>less than</strong> rib. <strong>Equivocal</strong> — SPECT needed.</div></div>
+                <div class="rib-row"><div class="rib-grade">Grade 2</div><div class="rib-heart heart-2">🫀</div><div class="rib-compare">vs 🦴</div><div class="rib-desc">Heart uptake <strong>equal to</strong> rib. <strong>Positive.</strong></div></div>
+                <div class="rib-row"><div class="rib-grade">Grade 3</div><div class="rib-heart heart-3">🫀</div><div class="rib-compare">vs 🦴</div><div class="rib-desc">Heart uptake <strong>greater than</strong> rib. <strong>Positive.</strong></div></div>
+            </div>
+            <table class="rib-table">
+                <tr><th>Why the rib?</th></tr>
+                <tr><td>• <strong>Bone-seeking tracer</strong> — ⁹⁹ᵐTc-PYP/DPD/HMDP normally accumulates in bone (ribs).</td></tr>
+                <tr><td>• <strong>ATTR fibrils bind the tracer</strong> → cardiac uptake equals or exceeds rib.</td></tr>
+                <tr><td>• <strong>AL fibrils generally do NOT bind</strong> → cardiac uptake usually Grade 0/1.</td></tr>
+                <tr><td>• <strong>Internal reference</strong> → reproducible across centers and readers.</td></tr>
+            </table>
+        </div>
+    `;
+}
+
+// ================= AL PROGNOSIS =================
+function computeALStage() {
+    let c = 0;
+    if (patient.dflc >= 18) c++;
+    if (patient.cTnT >= 0.025) c++;
+    if (patient.ntProBNP >= 1800) c++;
+    return c === 0 ? 'I' : c === 1 ? 'II' : c === 2 ? 'III' : 'IV';
+}
+function getALPrognosis(s) {
+    const d = {
+        'I':   { os: 94.1, os5: 59, cont: 96, hct: '88% 5-yr OS', cr: '~60%' },
+        'II':  { os: 40.3, os5: 42, cont: 80.2, hct: '86% 5-yr OS', cr: '~60%' },
+        'III': { os: 14.0, os5: 20, cont: 47.2, hct: '37-47% 5-yr', cr: '~50%' },
+        'IV':  { os: 5.8,  os5: 14, cont: 12.8, hct: 'Poor', cr: '~30%' }
+    };
+    return d[s];
+}
+function renderALPrognosis(s) {
+    const p = getALPrognosis(s);
+    return `
+        <div class="prognosis-card">
+            <div class="prognosis-title">Computed Mayo 2012 Stage</div>
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                <span class="stage-badge stage-${s}">Stage ${s}</span>
+                <span class="prognosis-value">${p.os} months</span>
+            </div>
+            <div class="prognosis-sub">Median OS (original cohort)</div>
+            <div class="prognosis-grid">
+                <div class="prognosis-item"><div class="label">5-Year OS</div><div class="value">${p.os5}%</div></div>
+                <div class="prognosis-item"><div class="label">Contemporary OS</div><div class="value">${p.cont} mo</div></div>
+                <div class="prognosis-item"><div class="label">CR (D-VCd)</div><div class="value">${p.cr}</div></div>
+                <div class="prognosis-item"><div class="label">Autologous HCT</div><div class="value" style="font-size:0.9rem;">${p.hct}</div></div>
+            </div>
+        </div>
+    `;
+}
+
+// ================= ATTR PROGNOSIS =================
+function computeATTRStage() {
+    let nac = 'I';
+    if (patient.ntProBNP >= 3000 || patient.egfr < 45) nac = 'II';
+    if (patient.ntProBNP >= 3000 && patient.egfr < 45) nac = 'III';
+    let mayo = 'I';
+    if (patient.cTnT > 0.05 || patient.ntProBNP > 3000) mayo = 'II';
+    if (patient.cTnT > 0.05 && patient.ntProBNP > 3000) mayo = 'III';
+    return { nac, mayo };
+}
+function getATTRPrognosis(nac) {
+    const d = {
+        'I':   { os3: 92.0, os5: 80, acor: '45% ACM reduction (HR 0.55)', vut: '36% ACM reduction (HR 0.64)' },
+        'II':  { os3: 67.5, os5: 55, acor: '45% ACM reduction (HR 0.55)', vut: '36% ACM reduction (HR 0.64)' },
+        'III': { os3: 47.0, os5: 30, acor: '45% ACM reduction (HR 0.55)', vut: '36% ACM reduction (HR 0.64)' }
+    };
+    return d[nac];
+}
+function getATTRvStage() {
+    let c = 0;
+    if (patient.gls >= -11) c++;
+    if (patient.ntProBNP >= 2000) c++;
+    if (patient.egfr <= 65) c++;
+    return c === 0 ? 'I' : c === 1 ? 'II' : 'III';
+}
+function renderATTRPrognosis() {
+    const { nac, mayo } = computeATTRStage();
+    const p = getATTRPrognosis(nac);
+    const vStage = getATTRvStage();
+    let vSection = '';
+    if (patient.attrType === 'v') {
+        const v5 = { 'I': 98.5, 'II': 75.1, 'III': 29.4 };
+        vSection = `
+            <div style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.2);">
+                <div class="prognosis-title">ATTRv (Hereditary) Staging</div>
+                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                    <span class="stage-badge stage-${vStage}">Stage ${vStage}</span>
+                    <span class="prognosis-value">${v5[vStage]}%</span>
+                </div>
+                <div class="prognosis-sub">5-year survival (GLS ≥ -11%, NT-proBNP ≥2000, eGFR ≤65)</div>
+            </div>
+        `;
+    }
+    return `
+        <div class="prognosis-card">
+            <div class="prognosis-title">NAC Staging (NT-proBNP + eGFR)</div>
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                <span class="stage-badge stage-${nac}">NAC Stage ${nac}</span>
+                <span class="prognosis-value">${p.os3}%</span>
+            </div>
+            <div class="prognosis-sub">3-year survival (contemporary cohort)</div>
+            <div class="prognosis-grid">
+                <div class="prognosis-item"><div class="label">5-Year OS (est.)</div><div class="value">${p.os5}%</div></div>
+                <div class="prognosis-item"><div class="label">Mayo Stage</div><div class="value">Stage ${mayo}</div></div>
+            </div>
+            <div style="margin-top:0.6rem; font-size:0.78rem; opacity:0.9;">
+                <strong>Acoramidis (54 mo):</strong> ${p.acor}<br>
+                <strong>Vutrisiran (42 mo):</strong> ${p.vut}
+            </div>
+            ${vSection}
+        </div>
+    `;
+}
+
+// ================= HF MANAGEMENT SECTION =================
+function renderHF() {
+    let left = `
+        <div class="step hf">
+            <div class="step-label">Why Standard HFrEF Therapy Fails</div>
+            <div class="step-content">
+                <strong>The problem is restrictive filling with a fixed, low stroke volume</strong> — not neurohormonal activation from a dilated, volume-overloaded ventricle.<br><br>
+                Amyloid infiltration produces a <strong>stiff, non-compliant ventricle</strong> with severe diastolic dysfunction and a small, relatively fixed stroke volume. Cardiac output becomes critically dependent on <strong>heart rate</strong>, and the ventricle is both <strong>preload-dependent</strong> and <strong>afterload-intolerant</strong>.
+            </div>
+        </div>
+        <div class="step hf">
+            <div class="step-label">Why Beta-Blockers Are Poorly Tolerated</div>
+            <div class="step-content">
+                • Fixed stroke volume → cardiac output depends on heart rate<br>
+                • Conduction system infiltration → intrinsic chronotropic incompetence<br>
+                • High discontinuation (22–43%)<br>
+                • <strong>Deprescribing in ATTR-CM associated with improved survival</strong><br>
+                • 2025 ACC allows bisoprolol ≤2.5 mg/d only if EF ≤40% or AF rate control
+            </div>
+        </div>
+        <div class="step hf">
+            <div class="step-label">Why ACEi / ARBs / ARNI Are Poorly Tolerated</div>
+            <div class="step-content">
+                • Vasodilation and hypotension in an output-limited ventricle<br>
+                • Autonomic dysfunction with orthostatic hypotension worsened<br>
+                • High discontinuation (33–59%)<br>
+                • ESC and AHA advise avoiding
+            </div>
+        </div>
+        <div class="step hf">
+            <div class="step-label">Agent-Specific Hazards in AL Amyloidosis</div>
+            <div class="avoid-box">
+                <div class="avoid-title">⛔ Avoid in AL Amyloidosis</div>
+                <strong>Nondihydropyridine CCBs</strong> (verapamil, diltiazem): bind amyloid fibrils → can precipitate <strong>heart block or shock</strong>.<br>
+                <strong>Digoxin:</strong> binds amyloid fibrils → <strong>toxicity risk even at normal serum levels</strong>.
+            </div>
+        </div>
+        ${patient.onDialysis ? renderDialysisBox() : ''}
+    `;
+
+    let right = `
+        <div class="regimen hf">
+            <div class="regimen-name">✅ Preferred: Loop Diuretics <span class="badge hf">Cornerstone</span></div>
+            <div class="step-content">
+                Cautious volume control — titrated carefully given the <strong>narrow euvolemic window</strong>.<br>
+                <strong>Example:</strong> Furosemide 20–40 mg PO/IV, titrate to euvolemia.
+            </div>
+        </div>
+        <div class="regimen hf">
+            <div class="regimen-name">✅ Mineralocorticoid Receptor Antagonists (MRA)</div>
+            <div class="step-content">
+                Spironolactone 12.5–25 mg daily or eplerenone 25 mg daily if BP/renal function adequate.<br>
+                <em>${patient.onDialysis ? '<span class="dial-avoid">⛔ Avoid in ESRD — hyperkalemia risk prohibitive.</span>' : ''}</em>
+            </div>
+        </div>
+        <div class="regimen hf">
+            <div class="regimen-name">✅ SGLT2 Inhibitors <span class="badge hf">Emerging benefit</span></div>
+            <div class="step-content">
+                Dapagliflozin 10 mg daily or empagliflozin 10 mg daily.<br>
+                <em>${patient.onDialysis ? '<span class="dial-caution">⚠️ Only if already on it — no initiation data at eGFR <25.</span>' : ''}</em>
+            </div>
+        </div>
+        <div class="regimen hf">
+            <div class="regimen-name">✅ Disease-Modifying Therapy <span class="badge hf">Alters course</span></div>
+            <div class="step-content">
+                <strong>ATTR:</strong> TTR stabilizers / gene silencers.<br>
+                <strong>AL:</strong> Plasma-cell-directed therapy (D-VCd, D-Cd, single-agent daratumumab).
+            </div>
+        </div>
+        ${patient.onDialysis ? renderDialysisBox() : ''}
+    `;
+    return { left, right };
+}
+
+// ================= DIALYSIS / ESRD PANEL =================
+function renderDIAL() {
+    let left = `
+        ${renderPatientInputs()}
+        <div class="step dial">
+            <div class="step-label">Core Principle</div>
+            <div class="step-content">
+                In dialysis-dependent AL amyloidosis, heart failure physiology is <strong>restrictive filling with a fixed, low stroke volume</strong> — not the dilated, neurohormonally-driven HFrEF pattern that standard HF drugs were designed to treat. Dialysis adds another layer: <strong>volume status is largely dictated by ultrafiltration during sessions</strong>, not by loop diuretics, which are often ineffective in anuric ESRD.
+            </div>
+        </div>
+        ${renderDialysisBox()}
+        <div class="step dial">
+            <div class="step-label">Practical Strategy</div>
+            <div class="step-content">
+                <strong>1. Optimize dialysis</strong> — ultrafiltration, consider CardioMEMS-guided PA pressure monitoring or CAPD for refractory congestion.<br>
+                <strong>2. Treat the underlying plasma cell clone</strong> — AL-directed chemotherapy is the only intervention that alters disease course.<br>
+                <strong>3. Use furosemide sparingly</strong> — only if residual renal function exists.<br>
+                <strong>4. Absolutely avoid</strong> verapamil, diltiazem, and digoxin.<br>
+                <strong>5. Palliative care involvement</strong> — appropriate for refractory congestion in advanced AL with ESRD, given poor prognosis.
+            </div>
+        </div>
+        <div class="step dial">
+            <div class="step-label">Dosing Considerations in ESRD</div>
+            <table class="table-sm">
+                <tr><th>Drug</th><th>ESRD Dosing</th></tr>
+                <tr><td><strong>Daratumumab</strong></td><td>Fixed 1,800 mg SC — no renal adjustment</td></tr>
+                <tr><td><strong>Bortezomib</strong></td><td>No dose adjustment — PK comparable across renal function</td></tr>
+                <tr><td><strong>Cyclophosphamide</strong></td><td>Monitor for increased toxicity; use consistent interval between drug and dialysis</td></tr>
+                <tr><td><strong>Dexamethasone</strong></td><td>No renal adjustment; reduce to 20 mg if age >70 or weight <60 kg</td></tr>
+                <tr><td><strong>Melphalan (HCT)</strong></td><td>Reduce from 200 to <strong>140 mg/m²</strong> if eGFR <30</td></tr>
+            </table>
+        </div>
+    `;
+
+    let right = `
+        <div class="regimen dial">
+            <div class="regimen-name">🩸 Ultrafiltration — Mainstay</div>
+            <div class="step-content">
+                Primary volume control in anuric ESRD. Individualize dry weight. Consider <strong>CardioMEMS</strong> for PA pressure-guided ultrafiltration (case report: HF hospitalizations reduced from 5/year to 1/10 months).<br>
+                <strong>CAPD</strong> reported effective for refractory congestion when IV diuretics fail.
+            </div>
+        </div>
+        <div class="regimen dial">
+            <div class="regimen-name">✅ Furosemide — Limited Role</div>
+            <div class="step-content">
+                High doses (40–80 mg BID, up to 200 mg IV) needed in advanced CKD. Not removed by dialysis. <strong>Often ineffective if anuric.</strong>
+            </div>
+        </div>
+        <div class="regimen dial">
+            <div class="regimen-name">✅ SGLT2i — Only if Already On</div>
+            <div class="step-content">
+                Dapagliflozin 10 mg daily may be continued if patient was on it before dialysis. <strong>No initiation data at eGFR <25.</strong>
+            </div>
+        </div>
+        <div class="avoid-box">
+            <div class="avoid-title">⛔ Absolutely Avoid in ESRD + AL</div>
+            <strong>ACEi / ARB / ARNI</strong> — hypotension; FOSIDIAL: no benefit in HD with LVH.<br>
+            <strong>Beta-blockers</strong> — worsens low-output state; deprescribing may improve survival.<br>
+            <strong>Spironolactone / MRA</strong> — hyperkalemia risk prohibitive.<br>
+            <strong>Verapamil / diltiazem</strong> — bind fibrils → heart block or shock.<br>
+            <strong>Digoxin</strong> — binds fibrils → toxicity at normal levels.
+        </div>
+        <div class="regimen dial">
+            <div class="regimen-name">🩸 Disease-Modifying Therapy in ESRD</div>
+            <div class="step-content">
+                <strong>AL-directed chemotherapy</strong> remains the only intervention that alters disease course. Daratumumab is fixed-dose (no renal adjustment). Bortezomib requires no adjustment. Cyclophosphamide: monitor toxicity; maintain consistent dialysis interval.
+            </div>
+        </div>
+        <div class="regimen dial">
+            <div class="regimen-name">🕊️ Palliative Care</div>
+            <div class="step-content">
+                Appropriate for refractory congestion in advanced AL with ESRD. Goals-of-care discussions given poor prognosis.
+            </div>
+        </div>
+    `;
+    return { left, right };
+}
+
+// ================= DIAGNOSTIC IMAGING =================
+function renderDIAG() {
+    let left = `
+        <div class="step diag">
+            <div class="step-label">When to Suspect Cardiac Amyloidosis</div>
+            <div class="step-content">
+                Consider CA screening if <strong>LV wall thickness ≥12 mm</strong> unexplained by loading conditions AND at least one red flag:
+                <ul style="margin:0.5rem 0 0 1.2rem; padding:0;">
+                    <li>Heart failure in age ≥65</li>
+                    <li>Aortic stenosis ≥65</li>
+                    <li>Previously hypertensive, now normotensive/hypotensive</li>
+                    <li>Autonomic dysfunction or peripheral polyneuropathy</li>
+                    <li>Proteinuria</li>
+                    <li>Skin bruising</li>
+                    <li>Bilateral carpal tunnel syndrome</li>
+                    <li>Ruptured biceps tendon</li>
+                    <li>Family history of amyloidosis</li>
+                </ul>
+            </div>
+        </div>
+        <div class="step diag">
+            <div class="step-label">ECG Findings — Prevalence & Diagnostic Value</div>
+            <table class="table-sm">
+                <tr><th>Finding</th><th>Prevalence</th><th>Note</th></tr>
+                <tr><td><strong>Low voltage</strong></td><td>56.5% overall; 64.5% AL</td><td>QRS amplitude <5 mm in limb leads</td></tr>
+                <tr><td><strong>Pseudo-infarct</strong></td><td>47.8% overall; 54.8% AL</td><td>Poor R-wave progression</td></tr>
+                <tr><td><strong>AV conduction disease</strong></td><td>Common in ATTR</td><td>Prolonged PR</td></tr>
+                <tr><td><strong>ST-T changes</strong></td><td>87.1% AL</td><td>Non-specific</td></tr>
+            </table>
+        </div>
+        <div class="step diag">
+            <div class="step-label">Echocardiography — Prevalence & Findings</div>
+            <table class="table-sm">
+                <tr><th>Finding</th><th>Prevalence</th><th>Note</th></tr>
+                <tr><td><strong>LVH ≥12 mm</strong></td><td>71% increased septal thickness</td><td>Primary screening trigger</td></tr>
+                <tr><td><strong>Diastolic dysfunction</strong></td><td>77.4% restrictive pattern</td><td>Grade 2+ is criterion</td></tr>
+                <tr><td><strong>Apical sparing</strong></td><td>74% reduced GLS</td><td>Ratio >2.9 diagnostic</td></tr>
+                <tr><td><strong>Biatrial enlargement</strong></td><td>80.6% LA enlargement</td><td>Common</td></tr>
+                <tr><td><strong>Myocardial sparkling</strong></td><td>38.7%</td><td>Low sensitivity</td></tr>
+            </table>
+        </div>
+        <div class="step diag">
+            <div class="step-label">Cardiac MRI — Diagnostic Criteria</div>
+            <table class="table-sm">
+                <tr><th>Finding</th><th>Role</th></tr>
+                <tr><td><strong>Subendocardial/transmural LGE</strong></td><td><strong>Required</strong> (diffuse pattern)</td></tr>
+                <tr><td><strong>Abnormal gadolinium kinetics</strong></td><td><strong>Required</strong> (myocardial nulling before blood pool)</td></tr>
+                <tr><td><strong>ECV ≥0.40%</strong></td><td>Supportive</td></tr>
+                <tr><td><strong>Elevated native T1</strong></td><td>Supportive</td></tr>
+            </table>
+        </div>
+    `;
+    let right = `
+        <div class="regimen diag">
+            <div class="regimen-name">🩺 Screening Triggers</div>
+            <div class="step-content">
+                <strong>Immunofixation + FLC:</strong> unexplained LVH ≥12 mm, HFpEF with elevated NT-proBNP, bilateral carpal tunnel, any red flag.<br>
+                <strong>PYP SPECT:</strong> monoclonal negative AND clinical suspicion of ATTR-CM.<br>
+                <strong>CMR:</strong> PYP equivocal (Grade 1), need to differentiate AL vs ATTR, or PYP negative but suspicion persists.
+            </div>
+        </div>
+        <div class="regimen diag">
+            <div class="regimen-name">📊 Prevalence Context</div>
+            <div class="step-content">
+                <strong>CA in HFpEF:</strong> ~13–15%<br>
+                <strong>CA among screened red-flag patients:</strong> 47.9% (73.9% AL, 26.1% ATTR)<br>
+                <strong>AA amyloidosis:</strong> 500–700 cases in France; renal involvement most common
+            </div>
+        </div>
+        <div class="regimen diag">
+            <div class="regimen-name">⚠️ Common Pitfalls</div>
+            <div class="step-content">
+                1. Low voltage absent in ~40%<br>
+                2. Normal ECG does NOT exclude CA<br>
+                3. Myocardial sparkling insensitive (~39%)<br>
+                4. PYP Grade 1 equivocal — needs SPECT/biopsy<br>
+                5. Monoclonal protein alone does NOT diagnose AL (MGUS can coexist with ATTR)
+            </div>
+        </div>
+    `;
+    return { left, right };
+}
+
+// ================= AL RENDER =================
+function renderAL() {
+    let stops = [];
+    if (patient.nyha === 'IIIB' || patient.nyha === 'IV') stops.push('NYHA Class IIIB/IV — D-VCd not recommended outside trials.');
+    if (patient.egfr < 20) stops.push(`eGFR ${patient.egfr} — excluded from ANDROMEDA.`);
+
+    let stage = computeALStage();
+    let rf = computeRedFlagScore();
+    let bsa = getBSA();
+
+    let left = `
+        ${renderPatientInputs()}
+        <div class="step"><div class="step-label">Step 1 · Confirm AL Typing</div><div class="step-content">Congo red + LMD-MS (gold standard). IHC insufficient alone.</div></div>
+        <div class="step">
+            <div class="step-label">Step 2 · Red Flags (${rf})</div>
+            <div class="red-flag-grid">
+                <div class="red-flag-item"><input type="checkbox" ${patient.ecgLowVoltage?'checked':''} onchange="toggleFlag('ecgLowVoltage')"> ECG low voltage</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.ecgPseudoInfarct?'checked':''} onchange="toggleFlag('ecgPseudoInfarct')"> Pseudo-infarct</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.echoLVH?'checked':''} onchange="toggleFlag('echoLVH')"> Echo LVH</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.echoApicalSparing?'checked':''} onchange="toggleFlag('echoApicalSparing')"> Apical sparing</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.mriLGE?'checked':''} onchange="toggleFlag('mriLGE')"> MRI LGE</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.carpalTunnel?'checked':''} onchange="toggleFlag('carpalTunnel')"> Carpal tunnel</div>
+            </div>
+            <div class="score-display">${rf} red flags</div>
+        </div>
+        <div class="step">
+            <div class="step-label">Step 3 · Mayo 2012 Staging (computed: Stage ${stage})</div>
+            <table class="table-sm">
+                <tr><th>Marker</th><th>Threshold</th><th>Patient</th><th>Met?</th></tr>
+                <tr><td>dFLC</td><td>≥18 mg/dL</td><td>${displayDFLC(patient.dflc)}</td><td>${patient.dflc >= 18 ? '✅' : '—'}</td></tr>
+                <tr><td>cTnT</td><td>≥0.025 ng/mL</td><td>${displayTnT(patient.cTnT)}</td><td>${patient.cTnT >= 0.025 ? '✅' : '—'}</td></tr>
+                <tr><td>NT-proBNP</td><td>≥1800 pg/mL</td><td>${displayNT(patient.ntProBNP)}</td><td>${patient.ntProBNP >= 1800 ? '✅' : '—'}</td></tr>
+            </table>
+        </div>
+        ${renderALPrognosis(stage)}
+        ${renderPYP()}
+        <div class="step hf">
+            <div class="step-label">HF Management (AL)</div>
+            <div class="step-content">
+                <strong>Preferred:</strong> Loop diuretics (cautious), MRA, SGLT2 inhibitors.<br>
+                <strong>Avoid:</strong> Beta-blockers, ACEi/ARB, ARNI (unless EF ≤40% or AF rate control).<br>
+                <strong>AL-specific hazards:</strong> <span style="color:#b71c1c;font-weight:600;">Nondihydropyridine CCBs (verapamil, diltiazem) and digoxin bind amyloid fibrils — can precipitate heart block, shock, or toxicity even at normal serum levels.</span>
+            </div>
+        </div>
+        ${patient.onDialysis ? renderDialysisBox() : ''}
+        <div class="step">
+            <div class="step-label">Step 5 · Organ Function & Dosing Inputs</div>
+            <div class="step-content">
+                <strong>eGFR:</strong> ${patient.egfr} mL/min/1.73m² ${patient.egfr < 30 ? '— <strong>melphalan HCT reduce to 140 mg/m²</strong>' : ''} ${patient.egfr < 20 ? '— <strong>D-VCd excluded</strong>' : ''}<br>
+                <strong>Weight:</strong> ${patient.weight} kg — Dexamethasone ${patient.age > 70 || patient.weight < 60 ? '<strong>20 mg</strong>' : '40 mg'} weekly<br>
+                <strong>BSA (Mosteller):</strong> ${bsa.toFixed(2)} m² — Bortezomib ${(1.3*bsa).toFixed(1)} mg; Cyclophosphamide ${Math.min(300*bsa, 500).toFixed(0)} mg (capped at 500)<br>
+                <strong>Factor X:</strong> ${patient.factorX}% ${patient.factorX < 50 ? '— consider rFVIIa for procedures' : ''}<br>
+                <strong>Dialysis:</strong> ${patient.onDialysis ? '<span style="color:#ad1457;font-weight:600;">Yes — see Dialysis guidance above</span>' : 'No'}
+            </div>
+        </div>
+    `;
+
+    let right = '';
+    if (stops.length) right += `<div class="stop-alert">⛔ HARD STOP(S):<br>${stops.join('<br>')}</div>`;
+    if (!stops.some(s => s.includes('IIIB') || s.includes('IV') || s.includes('eGFR'))) {
+        right += `
+            <div class="regimen">
+                <div class="regimen-name">✅ D-VCd <span class="badge" style="background:#cfe6ff;">Category 1</span></div>
+                <div class="regimen-dose">
+                    <strong>Daratumumab:</strong> 1,800 mg SC (fixed)<br>
+                    <strong>Bortezomib:</strong> ${(1.3*bsa).toFixed(1)} mg SC weekly<br>
+                    <strong>Cyclophosphamide:</strong> ${Math.min(300*bsa, 500).toFixed(0)} mg weekly (capped)<br>
+                    <strong>Dexamethasone:</strong> ${patient.age > 70 || patient.weight < 60 ? '20 mg' : '40 mg'} weekly
+                </div>
+                <div class="efficacy">ANDROMEDA: CR 59.5% vs 19.2%; OS HR 0.62</div>
+            </div>
+        `;
+    }
+    right += `
+        <div class="regimen"><div class="regimen-name">🔸 D-Cd (Neuropathy preferred)</div><div class="regimen-dose">Daratumumab 1,800 mg SC + Cyclophosphamide ${Math.min(300*bsa, 500).toFixed(0)} mg + Dex ${patient.age > 70 || patient.weight < 60 ? '20' : '40'} mg</div></div>
+        <div class="regimen"><div class="regimen-name">🟡 Single-agent Daratumumab (Advanced)</div><div class="regimen-dose">Daratumumab 1,800 mg SC</div><div class="efficacy">EMN22: 6-mo OS 65%</div></div>
+        ${patient.onDialysis ? renderDialysisBox() : ''}
+        <div class="regimen hf">
+            <div class="regimen-name">❤️ HF Management in AL</div>
+            <div class="step-content">
+                <strong>Loop diuretics:</strong> Furosemide 20–40 mg, titrate to euvolemia.<br>
+                <strong>MRA:</strong> Spironolactone 12.5–25 mg daily if BP/renal function adequate.${patient.onDialysis ? ' <span class="dial-avoid">⛔ Avoid in ESRD.</span>' : ''}<br>
+                <strong>SGLT2i:</strong> Dapagliflozin 10 mg daily.${patient.onDialysis ? ' <span class="dial-caution">⚠️ Only if already on it.</span>' : ''}<br>
+                <strong>AVOID:</strong> Beta-blockers, ACEi/ARB, ARNI, <span style="color:#b71c1c;font-weight:600;">verapamil/diltiazem, digoxin</span>.
+            </div>
+        </div>
+    `;
+    return { left, right };
+}
+
+// ================= ATTR RENDER =================
+function renderATTR() {
+    let rf = computeRedFlagScore();
+    let left = `
+        ${renderPatientInputs()}
+        <div class="step">
+            <div class="step-label">Step 1 · Red Flags (${rf})</div>
+            <div class="red-flag-grid">
+                <div class="red-flag-item"><input type="checkbox" ${patient.ecgLowVoltage?'checked':''} onchange="toggleFlag('ecgLowVoltage')"> ECG low voltage</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.ecgPseudoInfarct?'checked':''} onchange="toggleFlag('ecgPseudoInfarct')"> Pseudo-infarct</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.echoLVH?'checked':''} onchange="toggleFlag('echoLVH')"> Echo LVH</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.echoApicalSparing?'checked':''} onchange="toggleFlag('echoApicalSparing')"> Apical sparing</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.mriLGE?'checked':''} onchange="toggleFlag('mriLGE')"> MRI LGE</div>
+                <div class="red-flag-item"><input type="checkbox" ${patient.carpalTunnel?'checked':''} onchange="toggleFlag('carpalTunnel')"> Carpal tunnel</div>
+            </div>
+            <div class="score-display">${rf} red flags</div>
+        </div>
+        <div class="step"><div class="step-label">Step 2 · Non-Invasive Pathway</div><div class="step-content">Monoclonal protein <strong>negative</strong> → PYP SPECT → Grade 2/3 diagnostic → TTR sequencing.</div></div>
+        ${renderATTRPrognosis()}
+        ${renderPYP()}
+        <div class="step hf">
+            <div class="step-label">HF Management (ATTR)</div>
+            <div class="step-content">
+                <strong>Preferred:</strong> Loop diuretics (cautious), MRA, SGLT2 inhibitors.<br>
+                <strong>Avoid:</strong> Beta-blockers, ACEi/ARB, ARNI (unless EF ≤40% or AF rate control).<br>
+                <strong>Deprescribing beta-blockers in ATTR-CM has been associated with improved survival.</strong>
+            </div>
+        </div>
+        ${patient.onDialysis ? renderDialysisBox() : ''}
+        <div class="step">
+            <div class="step-label">Step 4 · Organ Summary</div>
+            <div class="step-content">
+                <strong>eGFR:</strong> ${patient.egfr}<br>
+                <strong>Weight:</strong> ${patient.weight} kg — Patisiran: ${(0.3*patient.weight).toFixed(1)} mg IV q3wk<br>
+                <strong>GLS:</strong> ${patient.gls}% — ${patient.gls >= -11 ? '⚠️ ≥ -11% (worse prognosis)' : 'Preserved'}<br>
+                <strong>NT-proBNP:</strong> ${displayNT(patient.ntProBNP)}<br>
+                <strong>Dialysis:</strong> ${patient.onDialysis ? '<span style="color:#ad1457;font-weight:600;">Yes</span>' : 'No'}
+            </div>
+        </div>
+    `;
+    let right = `
+        <div class="regimen"><div class="regimen-name">🟢 Tafamidis <span class="badge">Stabilizer</span></div><div class="regimen-dose">61 mg (free acid) or 80 mg (meglumine) daily</div><div class="efficacy">ATTR-ACT: reduced ACM and CV hospitalization</div><div class="warning">Caution with high-dose statins</div></div>
+        <div class="regimen"><div class="regimen-name">🟢 Acoramidis <span class="badge">Stabilizer</span></div><div class="regimen-dose">712 mg PO BID</div><div class="efficacy">ATTRibute-CM OLE (54 mo): <strong>45% ACM reduction (HR 0.55)</strong></div></div>
+        <div class="regimen"><div class="regimen-name">💊 Vutrisiran <span class="badge">Gene Silencer</span></div><div class="regimen-dose">25 mg SC every 12 weeks</div><div class="efficacy">HELIOS-B (42 mo): <strong>36% ACM reduction (HR 0.64)</strong></div></div>
+        <div class="regimen"><div class="regimen-name">💊 Patisiran <span class="badge">Gene Silencer</span></div><div class="regimen-dose">0.3 mg/kg IV q3wk = <strong>${(0.3*patient.weight).toFixed(1)} mg</strong> for ${patient.weight} kg</div><div class="efficacy">APOLLO-B: improved functional capacity</div></div>
+        ${patient.onDialysis ? renderDialysisBox() : ''}
+        <div class="regimen hf">
+            <div class="regimen-name">❤️ HF Management in ATTR</div>
+            <div class="step-content">
+                <strong>Loop diuretics:</strong> Furosemide 20–40 mg, titrate to euvolemia.<br>
+                <strong>MRA:</strong> Spironolactone 12.5–25 mg daily.${patient.onDialysis ? ' <span class="dial-avoid">⛔ Avoid in ESRD.</span>' : ''}<br>
+                <strong>SGLT2i:</strong> Dapagliflozin 10 mg daily.${patient.onDialysis ? ' <span class="dial-caution">⚠️ Only if already on it.</span>' : ''}<br>
+                <strong>AVOID:</strong> Beta-blockers, ACEi/ARB, ARNI (unless EF ≤40% or AF).<br>
+                <strong>Consider deprescribing beta-blockers</strong> — associated with improved survival.
+            </div>
+        </div>
+    `;
+    return { left, right };
+}
+
+// ================= AA RENDER =================
+function renderAA() {
+    let left = `
+        ${renderPatientInputs()}
+        <div class="step"><div class="step-label">Step 1 · Confirm AA</div><div class="step-content">Congo red + MS/IHC confirms AA.</div></div>
+        <div class="step"><div class="step-label">Step 2 · Driver</div><div class="step-content">Screen chronic inflammation/infection.</div></div>
+        <div class="step"><div class="step-label">Step 3 · Monitor</div><div class="step-content">Serum SAA (or CRP) — target SAA <10 mg/L.</div></div>
+    `;
+    let right = `
+        <div class="regimen"><div class="regimen-name">🔴 Colchicine</div><div class="step-content">FMF; prevents renal disease.</div></div>
+        <div class="regimen"><div class="regimen-name">🟠 IL-1 Inhibitors</div><div class="step-content">Colchicine-resistant FMF.</div></div>
+        <div class="regimen"><div class="regimen-name">🟡 TNF/IL-6 Inhibitors</div><div class="step-content">Rheumatologic drivers.</div></div>
+        <div class="regimen"><div class="regimen-name">🟢 Antimicrobials</div><div class="step-content">Chronic infection.</div></div>
+    `;
+    return { left, right };
+}
+
+// ================= RARE =================
+function renderRARE() {
+    let left = `
+        <div class="step rare"><div class="step-label">Core Principle</div><div class="step-content">Treatment determined <strong>entirely by fibril protein type</strong>. Rare subtypes require <strong>mass spectrometry</strong> — IHC unreliable. Genetic testing confirms hereditary forms.</div></div>
+        <div class="step rare"><div class="step-label">Subtype Reference</div>
+            <table class="table-sm">
+                <tr><th>Subtype</th><th>Precursor</th><th>Organs</th></tr>
+                <tr><td><strong>AApoA-I</strong></td><td>APOA1</td><td>Liver, kidney, heart</td></tr>
+                <tr><td><strong>AApoA-II</strong></td><td>APOA2</td><td>Kidney</td></tr>
+                <tr><td><strong>AApoA-IV</strong></td><td>APOA4</td><td>Kidney (tubulointerstitial)</td></tr>
+                <tr><td><strong>AGel</strong></td><td>GEL</td><td>Kidney, systemic</td></tr>
+                <tr><td><strong>AFib</strong></td><td>FGA</td><td>Kidney (glomerular), liver</td></tr>
+                <tr><td><strong>ALys</strong></td><td>LYZ</td><td>Systemic</td></tr>
+                <tr><td><strong>ACys</strong></td><td>CST3 L68Q</td><td>Brain (HCCAA)</td></tr>
+                <tr><td><strong>Aβ2M</strong></td><td>β2-microglobulin</td><td>Joints, bone</td></tr>
+                <tr><td><strong>ALECT2</strong></td><td>LECT2</td><td>Kidney, lung</td></tr>
+            </table>
+        </div>
+    `;
+    let right = `
+        <div class="regimen rare"><div class="regimen-name">🧬 AApoA-I / II / IV</div><div class="step-content">Liver transplantation (removes mutant source). Combined liver-kidney for renal failure.</div></div>
+        <div class="regimen rare"><div class="regimen-name">🧬 AGel</div><div class="step-content">No targeted drug. Preclinical: trans-zeatin.</div></div>
+        <div class="regimen rare"><div class="regimen-name">🧬 AFib</div><div class="step-content">Combined liver-kidney transplantation — potentially curative.</div></div>
+        <div class="regimen rare"><div class="regimen-name">🧬 ALys</div><div class="step-content">Organ support.</div></div>
+        <div class="regimen rare"><div class="regimen-name">🧬 ACys</div><div class="step-content">Avoid fever (promotes dimerization).</div></div>
+        <div class="regimen rare"><div class="regimen-name">🧬 Aβ2M</div><div class="step-content">High-flux dialysis membranes.</div></div>
+        <div class="regimen rare"><div class="regimen-name">🧬 ALECT2</div><div class="step-content">SGLT-2 inhibitors may stabilize renal function.</div></div>
+    `;
+    return { left, right };
+}
+
+// ================= RENDER =================
+function render() {
+    let out;
+    if (currentType === 'AL') out = renderAL();
+    else if (currentType === 'ATTR') out = renderATTR();
+    else if (currentType === 'AA') out = renderAA();
+    else if (currentType === 'DIAG') out = renderDIAG();
+    else if (currentType === 'HF') out = renderHF();
+    else if (currentType === 'DIAL') out = renderDIAL();
+    else out = renderRARE();
+    document.getElementById('leftPanel').innerHTML = out.left;
+    document.getElementById('rightPanel').innerHTML = out.right;
+}
+
+function selectType(t) {
+    currentType = t;
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === t));
+    render();
+}
+function setUnit(u) {
+    currentUnit = u;
+    document.getElementById('unitUS').classList.toggle('active', u === 'US');
+    document.getElementById('unitSI').classList.toggle('active', u === 'SI');
+    render();
+}
+window.onload = render;
+</script>
+</body>
+</html>
